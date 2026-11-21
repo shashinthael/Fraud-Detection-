@@ -1,0 +1,21 @@
+# Dataset — too large for GitHub
+*.csv
+dataset/
+
+# Large model files
+*.h5
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment
+.env
+# macOS
+.DS_Store
+
+# Personal and university documents
+*.docx
