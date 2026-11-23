@@ -4,7 +4,7 @@ My MSc Software Engineering dissertation project at the University of Hertfordsh
 
 ## Results
 
-The selected model is a neural network with a decision threshold of 0.35. It was tested on a held-out test set that keeps the real fraud rate of 0.17%:
+The selected model is a neural network. These are its scores on the 20% test set, which keeps the real fraud rate of 0.17%, at the default decision threshold of 0.50:
 
 | Metric | Score |
 |---|---|
@@ -12,7 +12,7 @@ The selected model is a neural network with a decision threshold of 0.35. It was
 | Precision | 0.81 |
 | Recall | 0.84 |
 | ROC-AUC | 0.97 |
-| PR-AUC | 0.85 |
+| PR-AUC | 0.86 |
 
 Accuracy is 99.94%, but with only 0.17% fraud that number says little. F1, precision and PR-AUC are the metrics that matter here.
 
@@ -34,12 +34,18 @@ The dataset isn't included in this repo. Download `creditcard.csv` from Kaggle.
 ## How it works
 
 1. **Data exploration:** class imbalance, distributions, and feature correlations with fraud.
-2. **Preprocessing:** `Time` and `Amount` are scaled with `StandardScaler`. The data is split 80/20 with stratification, so both sets keep the 0.17% fraud rate. SMOTE is then applied to the **training set only**, so no synthetic data leaks into the test set.
+2. **Preprocessing:** `Time` and `Amount` are scaled with `StandardScaler`. The data is split 80/20 with stratification, so both sets keep the 0.17% fraud rate. SMOTE is then applied to the **training set only**.
 3. **Model training:** Logistic Regression, Random Forest, XGBoost, and a neural network (Dense 128 → 64 → 32 → 16 → 1, with dropout and batch normalisation, early stopping and learning-rate reduction).
-4. **Model comparison and threshold tuning:** thresholds from 0.10 to 0.90 are tested. The neural network performs best at 0.35.
+4. **Model comparison and threshold tuning:** thresholds from 0.10 to 0.90 are tested. The best was 0.25 (F1 0.83), and the API uses it. F1 is 0.82 anywhere from 0.30 to 0.70.
 5. **Explainability:** SHAP `DeepExplainer` produces summary plots for the whole model and waterfall plots for individual predictions.
-6. **Drift detection:** a Page-Hinkley detector, written from scratch, reads the stream of prediction errors and raises an alert when the error rate starts to climb, which is a sign the model is degrading.
-7. **Flask API:** serves the model and the drift detector.
+6. **Drift detection:** a Page-Hinkley detector, written from scratch, reads the stream of prediction errors and is designed to raise an alert when the error rate climbs. It raised no alerts on the test set.
+7. **Flask API:** serves the model and a drift detector, which reads the predicted fraud probabilities because the true labels aren't known at that point.
+
+## Limitations
+
+- The threshold was chosen on the test set, so the 0.83 score at 0.25 is optimistic. The models were also compared on that test set, with no separate final test set.
+- `Time` and `Amount` were scaled before the split, so the scalers saw the test data.
+- The printed summary in notebook `06` shows a threshold of 0.35. That text is out of date: the saved threshold is 0.25.
 
 ## API
 
